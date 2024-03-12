@@ -16,4 +16,4 @@ To run the app:
 ```bash
 python run app.py
 ```
-* Virtual environment are encouraged
+* Virtual environments are encouraged
