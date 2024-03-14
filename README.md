@@ -1,6 +1,7 @@
 # QC_SoftTest
 
 # Simple Webbapp using HTML/CSS + Flask For Medical Cost Prediction in USA
+# SQL SERVER powered for database
 This app is designed for Medical Cost prediction in four biggest regions in USA.
 
 To setup and run the app. Please refer to following steps.
