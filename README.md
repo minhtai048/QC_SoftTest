@@ -7,13 +7,13 @@ To setup and run the app. Please refer to following steps.
 
 ## To setup the app:
 
-Ensure your device have "pip" installed. Otherwise, please refer to this link and install the pip package first:
+Ensure your device have "pip" installed. Otherwise, please refer to this link and install the pip package:
 https://phoenixnap.com/kb/install-pip-windows
 
 First, open your cmd or console, cd to the QC_SoftTest folder, then run these command lines:
 
 * Some devices won't start installing setuptools automatically. Hence run this command first.
-* 
+
 ```bash
 pip install setuptools
 ```
