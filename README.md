@@ -43,8 +43,8 @@ python app.py
 All steps are the same as mentioned above.
 
 TODO List (it isn't completed, other features may added or changed.)
-* Attach to database
-* <s>Feature 1: A function that counts total uses of webbapp in real-time. The output should expect related things to display on the frontend.</s>
-* <s>Feature 2: A function that displays a graph for total uses monitoring over time. The output should expect a graph displayed in the frontend.</s>
+* <s>Attach to database</s>
+* <s>Feature 1: A function that counts total uses of webbapp in real-time. The output should expect related things to display in frontend.</s>
+* <s>Feature 2: A function that displays a graph for monitoringtotal uses over time. The output should expect a graph displayed in frontend.</s>
 * Feature 3: A function that collects information of provided users and stores to database.
 * Feature 4: A function for user to login.
