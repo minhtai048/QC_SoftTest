@@ -1,7 +1,7 @@
 # QC_SoftTest
 
 # Simple Webbapp using HTML/CSS + Flask For Medical Cost Prediction in USA
-This app is designed for Medical Cost prediction in four biggest region in USA.
+This app is designed for Medical Cost prediction in four biggest regions in USA.
 
 To setup and run the app. Please refer to following steps.
 
@@ -41,3 +41,10 @@ python app.py
 
 * It would be nice if you can use your virtual environment to host the webapp independently.
 All steps are the same as mentioned above.
+
+TODO List (it isn't completed, other features may added or changed.)
+* Attach to database
+* <s>Feature 1: A function that counts total uses of webbapp in real-time. The output should expect related things to display on the frontend.</s>
+* <s>Feature 2: A function that displays a graph for total uses monitoring over time. The output should expect a graph displayed in the frontend.</s>
+* Feature 3: A function that collects information of provided users and stores to database.
+* Feature 4: A function for user to login.
