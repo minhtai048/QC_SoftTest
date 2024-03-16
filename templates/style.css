@@ -1,0 +1,75 @@
+#Masthead{
+  background-color:mediumpurple;
+}
+#icongrid{
+  background-color:antiquewhite;
+}
+
+#box_age{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+
+#box_gender{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+#box_bmi{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+
+#box_children{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+
+#box_smoking{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+
+#box_region{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+#predic{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+
+#predic:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_age:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_gender:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_bmi:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_children:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_smoking:hover{
+  box-shadow:none;
+  transition:0.5s all;
+}
+
+#box_region:hover
+{
+  box-shadow:none;
+  transition:0.5s all;
+}
