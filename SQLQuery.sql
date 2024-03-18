@@ -18,3 +18,5 @@ CREATE TABLE MonitoringData(
     ID int identity(1,1) PRIMARY KEY,
 	totalPred int,
 	TimeDate datetime)
+
+
