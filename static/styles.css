@@ -1,0 +1,31 @@
+#Masthead{
+  background-color:mediumpurple;
+}
+#icongrid{
+  background-color:antiquewhite;
+}
+
+#box_age,
+#box_gender,
+#box_bmi,
+#box_children,
+#box_smoking,
+#box_region{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+#predic{
+  background-color:antiquewhite;
+  box-shadow: 0 2px 5px 5px #fff;
+}
+#predic:hover,
+#box_age:hover,
+#box_gender:hover,
+#box_bmi:hover,
+#box_children:hover,
+#box_smoking:hover,
+#box_region:hover
+{
+  box-shadow:none;
+  transition:0.5s all;
+}
