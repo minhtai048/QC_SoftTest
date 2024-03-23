@@ -24,7 +24,7 @@ def check_login(username, password):
     return result is not None
 @app.route('/main')
 def main():
-    return render_template('index_main.html')
+    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -32,7 +32,7 @@ def login():
     password = request.form.get('password')
     
     if check_login(username, password):
-        return redirect(url_for('main'))  # changed from 'index_main.html' to 'main'
+        return redirect(url_for('main'))  # changed from 'index.html' to 'main'
     else:
         flash('Tên đăng nhập hoặc mật khẩu không đúng')
         return redirect(url_for('home'))
@@ -138,7 +138,7 @@ def predict():
     insert_to_inputdata(features_to_database)
 
     #final section -> send data back to front page
-    return render_template('index_main.html', age=ageinput, gender=gender_display, bmi=bmiinput, child=childinput,
+    return render_template('index.html', age=ageinput, gender=gender_display, bmi=bmiinput, child=childinput,
                         smoking=smokinginput, region=regioninput, prediction_text= prediction, 
                         total_pred=inputdata_to_totalpred())
 
