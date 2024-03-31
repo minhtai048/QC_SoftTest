@@ -9,9 +9,34 @@ Commerical purposes are restricted, any modifications are expected to have permi
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for, flash
 import pickle
 import pyodbc
+
+
+#Flask class - Web application. 
+app = Flask(__name__)
+# Hàm kiểm tra tên đăng nhập và mật khẩu
+def check_login(username, password):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Users WHERE Username = ? AND Password = ?", (username, password))
+    result = cursor.fetchone()
+    return result is not None
+@app.route('/main')
+def main():
+    return render_template('index.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    if check_login(username, password):
+        return redirect(url_for('main'))  # changed from 'index.html' to 'main'
+    else:
+        flash('Tên đăng nhập hoặc mật khẩu không đúng')
+        return redirect(url_for('home'))
+
 
 #Connecting to database - SQL SERVER
 #change the connect query corresponding to your device. The format shall look like these:
@@ -21,11 +46,11 @@ import pyodbc
 #If still having problem, please refer to other sources for best solution.
 #In case of window authentication, replace the "user ID and Password" with "trusted_connection=true"
 #My current port is 8008, if this port in your device is occupied then switch to other ports.
-conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Flask class - Web application. 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 #Load the trained model and encoder. (Pickle file)
 model = pickle.load(open('models/svr_model.pkl', 'rb'))
@@ -71,7 +96,7 @@ def inputdata_to_totalpred():
 #use the route() decorator to tell Flask what URL should trigger our function.
 @app.route('/')
 def home():
-    return render_template('index.html', total_pred=inputdata_to_totalpred())
+    return render_template('index_login.html', total_pred=inputdata_to_totalpred())
 
 #GET: A GET message is send, and the server returns data
 #POST: Used to send HTML form data to the server.
