@@ -29,18 +29,40 @@ def check_login(username, password):
 def menu():
     return render_template('menu.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-    if check_login(username, password):
-        return redirect(url_for('menu'))
+        if check_login(username, password):
+            return redirect(url_for('menu'))
+        else:
+            message = {'message' : 
+                       f'Username or password incorrect, return and try again'}
+            return make_response(jsonify(message), 403)
     else:
-        #flash('Tên đăng nhập hoặc mật khẩu không đúng')
-        message = {'message' : 
-                   f'Username or password incorrect, return and try again'}
-        return make_response(jsonify(message), 403)
+        return render_template('login.html')
+
+@app.route('/sign_up', methods=['GET', 'POST'])
+def sign_up():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Xử lý yêu cầu đăng ký ở đây
+        # Kiểm tra xem tên người dùng đã tồn tại chưa
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Users WHERE Username = ?", (username,))
+        result = cursor.fetchone()
+        if result is not None:
+            message = {'message' : 'Username already exists, please choose another username'}
+            return make_response(jsonify(message), 403)
+        else:
+            # Nếu tên người dùng chưa tồn tại, thêm người dùng mới vào cơ sở dữ liệu
+            cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            return redirect(url_for('login'))
+    return render_template('sign_up.html')
 
 
 #Connecting to database - SQL SERVER
@@ -53,7 +75,7 @@ def login():
 #If still having problem, please refer to other sources for best solution.
 #In case of window authentication, replace the "user ID and Password" with "trusted_connection=true"
 #My current port is 8008, if this port in your device is occupied then switch to other ports.
-conn = pyodbc.connect("DRIVER={SQL Server};Server=TAI-LAPTOP\SQLEXPRESS;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Flask class - Web application. 
