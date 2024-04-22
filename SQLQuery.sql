@@ -18,3 +18,15 @@ CREATE TABLE MonitoringData(
     ID int identity(1,1) PRIMARY KEY,
 	totalPred int,
 	TimeDate datetime)
+CREATE TABLE Users (
+    Username NVARCHAR(50) NOT NULL,
+    Password NVARCHAR(50) NOT NULL,
+    PRIMARY KEY (Username)
+)
+GO
+INSERT INTO Users
+VALUES(
+'testapi@gmail.com',
+'testapi'
+)
+GO
