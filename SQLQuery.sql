@@ -26,7 +26,7 @@ CREATE TABLE Users (
 GO
 INSERT INTO Users
 VALUES(
-'mimi0@gmail.com',
-'mimi0'
+'testapi@gmail.com',
+'testapi'
 )
 GO

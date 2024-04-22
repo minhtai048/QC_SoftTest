@@ -3,50 +3,55 @@
 """
 !!!DISCLAIMER!!
 All data are protected by US Office Of Government Ethics (OGE).
-Commerical purposes are restricted, any modifications are expected to have permission from US Authorities.
+Commerical purposes are restricted, any modifications are 
+expected to have permission from US Authorities.
 """
 
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template
+from flask import redirect, url_for, jsonify, make_response
 import pickle
 import pyodbc
 
-
 #Flask class - Web application. 
 app = Flask(__name__)
-# Hàm kiểm tra tên đăng nhập và mật khẩu
+# function for login checking
 def check_login(username, password):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Users WHERE Username = ? AND Password = ?", (username, password))
+    cursor.execute("SELECT * FROM Users WHERE Username = ? AND Password = ?", 
+                   (username, password))
     result = cursor.fetchone()
     return result is not None
-@app.route('/main')
-def main():
-    return render_template('index.html')
+
+@app.route('/menu')
+def menu():
+    return render_template('menu.html')
 
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
     password = request.form.get('password')
-    
+
     if check_login(username, password):
-        return redirect(url_for('main'))  # changed from 'index.html' to 'main'
+        return redirect(url_for('menu'))
     else:
-        flash('Tên đăng nhập hoặc mật khẩu không đúng')
-        return redirect(url_for('home'))
+        #flash('Tên đăng nhập hoặc mật khẩu không đúng')
+        return make_response(jsonify({'message' : f'Username or password incorrect, return and try again'}), 403)
 
 
 #Connecting to database - SQL SERVER
 #change the connect query corresponding to your device. The format shall look like these:
-#DRIVER={Devart ODBC Driver for SQL Server};Server=myserver;Database=mydatabase;Port=myport;User ID=myuserid;Password=mypassword
+#DRIVER={Devart ODBC Driver for SQL Server};Server=myserver;Database=mydatabase;
+#Port=myport;User ID=myuserid;Password=mypassword
 #Note:
-#Most of regular cases, the "DRIVER" term should be {SQL Server}, if not work then try using {SQL Server Native Client 11.0}
+#Most of regular cases, the "DRIVER" term should be {SQL Server}, if not work then try using 
+#{SQL Server Native Client 11.0}
 #If still having problem, please refer to other sources for best solution.
 #In case of window authentication, replace the "user ID and Password" with "trusted_connection=true"
 #My current port is 8008, if this port in your device is occupied then switch to other ports.
-conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=TAI-LAPTOP\SQLEXPRESS;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Flask class - Web application. 
@@ -96,7 +101,7 @@ def inputdata_to_totalpred():
 #use the route() decorator to tell Flask what URL should trigger our function.
 @app.route('/')
 def home():
-    return render_template('index_login.html', total_pred=inputdata_to_totalpred())
+    return render_template('login.html')
 
 #GET: A GET message is send, and the server returns data
 #POST: Used to send HTML form data to the server.
@@ -114,8 +119,9 @@ def predict():
 
     gender_display = genderinput 
     #feature transformation section
-    features = pd.DataFrame({"age":[ageinput], "sex":[genderinput], "bmi":[bmiinput], 
-                             "children":[childinput], "smoker":[smokinginput], "region":[regioninput]}) 
+    features = pd.DataFrame({"age":[ageinput], "sex":[genderinput], 
+                             "bmi":[bmiinput], "children":[childinput], 
+                             "smoker":[smokinginput], "region":[regioninput]}) 
     
     features = features.replace('male', 1)
     features = features.replace('female', 0)
@@ -138,9 +144,10 @@ def predict():
     insert_to_inputdata(features_to_database)
 
     #final section -> send data back to front page
-    return render_template('index.html', age=ageinput, gender=gender_display, bmi=bmiinput, child=childinput,
-                        smoking=smokinginput, region=regioninput, prediction_text= prediction, 
-                        total_pred=inputdata_to_totalpred())
+    return render_template('index.html', age=ageinput, gender=gender_display, 
+                           bmi=bmiinput, child=childinput, smoking=smokinginput, 
+                           region=regioninput, prediction_text= prediction, 
+                           total_pred=inputdata_to_totalpred())
 
 if __name__ == "__main__":
     app.run()
