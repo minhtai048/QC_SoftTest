@@ -38,7 +38,9 @@ def login():
         return redirect(url_for('menu'))
     else:
         #flash('Tên đăng nhập hoặc mật khẩu không đúng')
-        return make_response(jsonify({'message' : f'Username or password incorrect, return and try again'}), 403)
+        message = {'message' : 
+                   f'Username or password incorrect, return and try again'}
+        return make_response(jsonify(message), 403)
 
 
 #Connecting to database - SQL SERVER
