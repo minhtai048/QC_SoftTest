@@ -3,29 +3,83 @@
 """
 !!!DISCLAIMER!!
 All data are protected by US Office Of Government Ethics (OGE).
-Commerical purposes are restricted, any modifications are expected to have permission from US Authorities.
+Commerical purposes are restricted, any modifications are 
+expected to have permission from US Authorities.
 """
 
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from flask import Flask, request, render_template
+from flask import redirect, url_for, jsonify, make_response
 import pickle
 import pyodbc
 
+#Flask class - Web application. 
+app = Flask(__name__)
+# function for login checking
+def check_login(username, password):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Users WHERE Username = ? AND Password = ?", 
+                   (username, password))
+    result = cursor.fetchone()
+    return result is not None
+
+@app.route('/menu')
+def menu():
+    return render_template('menu.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if check_login(username, password):
+            return redirect(url_for('menu'))
+        else:
+            message = {'message' : 
+                       f'Username or password incorrect, return and try again'}
+            return make_response(jsonify(message), 403)
+    else:
+        return render_template('login.html')
+
+@app.route('/sign_up', methods=['GET', 'POST'])
+def sign_up():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Xử lý yêu cầu đăng ký ở đây
+        # Kiểm tra xem tên người dùng đã tồn tại chưa
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Users WHERE Username = ?", (username,))
+        result = cursor.fetchone()
+        if result is not None:
+            message = {'message' : 'Username already exists, please choose another username'}
+            return make_response(jsonify(message), 403)
+        else:
+            # Nếu tên người dùng chưa tồn tại, thêm người dùng mới vào cơ sở dữ liệu
+            cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            return redirect(url_for('login'))
+    return render_template('sign_up.html')
+
+
 #Connecting to database - SQL SERVER
 #change the connect query corresponding to your device. The format shall look like these:
-#DRIVER={Devart ODBC Driver for SQL Server};Server=myserver;Database=mydatabase;Port=myport;User ID=myuserid;Password=mypassword
+#DRIVER={Devart ODBC Driver for SQL Server};Server=myserver;Database=mydatabase;
+#Port=myport;User ID=myuserid;Password=mypassword
 #Note:
-#Most of regular cases, the "DRIVER" term should be {SQL Server}, if not work then try using {SQL Server Native Client 11.0}
+#Most of regular cases, the "DRIVER" term should be {SQL Server}, if not work then try using 
+#{SQL Server Native Client 11.0}
 #If still having problem, please refer to other sources for best solution.
 #In case of window authentication, replace the "user ID and Password" with "trusted_connection=true"
 #My current port is 8008, if this port in your device is occupied then switch to other ports.
-conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Flask class - Web application. 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 #Load the trained model and encoder. (Pickle file)
 model = pickle.load(open('models/svr_model.pkl', 'rb'))
@@ -71,7 +125,7 @@ def inputdata_to_totalpred():
 #use the route() decorator to tell Flask what URL should trigger our function.
 @app.route('/')
 def home():
-    return render_template('index.html', total_pred=inputdata_to_totalpred())
+    return render_template('login.html')
 
 #GET: A GET message is send, and the server returns data
 #POST: Used to send HTML form data to the server.
@@ -89,8 +143,9 @@ def predict():
 
     gender_display = genderinput 
     #feature transformation section
-    features = pd.DataFrame({"age":[ageinput], "sex":[genderinput], "bmi":[bmiinput], 
-                             "children":[childinput], "smoker":[smokinginput], "region":[regioninput]}) 
+    features = pd.DataFrame({"age":[ageinput], "sex":[genderinput], 
+                             "bmi":[bmiinput], "children":[childinput], 
+                             "smoker":[smokinginput], "region":[regioninput]}) 
     
     features = features.replace('male', 1)
     features = features.replace('female', 0)
@@ -113,9 +168,10 @@ def predict():
     insert_to_inputdata(features_to_database)
 
     #final section -> send data back to front page
-    return render_template('index.html', age=ageinput, gender=gender_display, bmi=bmiinput, child=childinput,
-                        smoking=smokinginput, region=regioninput, prediction_text= prediction, 
-                        total_pred=inputdata_to_totalpred())
+    return render_template('index.html', age=ageinput, gender=gender_display, 
+                           bmi=bmiinput, child=childinput, smoking=smokinginput, 
+                           region=regioninput, prediction_text= prediction, 
+                           total_pred=inputdata_to_totalpred())
 
 if __name__ == "__main__":
     app.run()
