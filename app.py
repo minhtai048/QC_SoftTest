@@ -61,11 +61,13 @@ def menu():
                    f'Unauthorized request'}
         return make_response(jsonify(message), 405)
 
+
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        sr_quest = request.form.get('SR_Quest')  # Thêm dòng này
         # Xử lý yêu cầu đăng ký ở đây
         # Kiểm tra xem tên người dùng đã tồn tại chưa
         cursor = conn.cursor()
@@ -76,11 +78,33 @@ def sign_up():
             return make_response(jsonify(message), 403)
         else:
             # Nếu tên người dùng chưa tồn tại, thêm người dùng mới vào cơ sở dữ liệu
-            cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", (username, password))
+            cursor.execute("INSERT INTO Users (Username, Password, SR_Quest) VALUES (?, ?, ?)", (username, password, sr_quest))  # Chỉnh sửa dòng này
             conn.commit()
             #return redirect(url_for('login'))
     else:
         return render_template('sign_up.html')
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        sr_quest = request.form.get('SR_Quest')
+        new_password = request.form.get('new_password')
+        # Xử lý yêu cầu đặt lại mật khẩu ở đây
+        # Kiểm tra xem email và SR_Quest có khớp với dữ liệu trong cơ sở dữ liệu không
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Users WHERE Username = ? AND SR_Quest = ?", (email, sr_quest))
+        result = cursor.fetchone()
+        if result is None:
+            message = {'message' : 'Email or secret question incorrect, return and try again'}
+            return make_response(jsonify(message), 403)
+        else:
+            # Nếu email và SR_Quest khớp, cập nhật mật khẩu mới trong cơ sở dữ liệu
+            cursor.execute("UPDATE Users SET Password = ? WHERE Username = ?", (new_password, email))
+            conn.commit()
+            return redirect(url_for('login'))
+    return render_template('forgot_password.html')
+
 
 # get predicted result from inputs
 @app.route('/predict',methods=['POST']) # Do not add two methods
