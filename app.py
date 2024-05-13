@@ -21,7 +21,7 @@ from utils.database_process import *
 is_valid_request = False
 
 # connection string
-conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Load the trained model and encoder. (Pickle file)
@@ -61,6 +61,27 @@ def menu():
                    f'Unauthorized request'}
         return make_response(jsonify(message), 405)
 
+@app.route('/sign_up', methods=['GET', 'POST'])
+def sign_up():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Xử lý yêu cầu đăng ký ở đây
+        # Kiểm tra xem tên người dùng đã tồn tại chưa
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Users WHERE Username = ?", (username,))
+        result = cursor.fetchone()
+        if result is not None:
+            message = {'message' : 'Username already exists, please choose another username'}
+            return make_response(jsonify(message), 403)
+        else:
+            # Nếu tên người dùng chưa tồn tại, thêm người dùng mới vào cơ sở dữ liệu
+            cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            #return redirect(url_for('login'))
+    else:
+        return render_template('sign_up.html')
+
 # get predicted result from inputs
 @app.route('/predict',methods=['POST']) # Do not add two methods
 def predict():
@@ -98,7 +119,7 @@ def predict():
 
     global is_valid_request; is_valid_request = False
     #final section -> send data back to front page
-    return render_template('index.html', age=ageinput, gender=gender_display, 
+    return render_template('menu.html', age=ageinput, gender=gender_display, 
                            bmi=bmiinput, child=childinput, smoking=smokinginput, 
                            region=regioninput, prediction_text= prediction, 
                            total_pred=inputdata_to_totalpred(conn))
