@@ -12,7 +12,7 @@ import pandas as pd
 import pickle
 import pyodbc
 from datetime import datetime
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, flash
 from flask import redirect, url_for, jsonify, make_response
 from utils.app_process import *
 from utils.database_process import *
@@ -21,7 +21,7 @@ from utils.database_process import *
 is_valid_request = False
 
 # connection string
-conn = pyodbc.connect("DRIVER={SQL Server};Server=LAPTOP-8MJ97B04;" +
+conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 
 #Load the trained model and encoder. (Pickle file)
@@ -31,6 +31,7 @@ lmbda = pickle.load(open('models/lmbda_price.pkl', 'rb'))
 
 #Flask class - Web application. 
 app = Flask(__name__)
+app.secret_key = "QCTESTING"
 
 # homepage - login UI. 
 @app.route('/')
@@ -38,18 +39,21 @@ def home():
     return render_template('login.html')
 
 # get user login and process
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-    if check_login(username, password, conn):
-        global is_valid_request; is_valid_request = True
-        return redirect(url_for('menu'))
+        if check_login(username, password, conn):
+            global is_valid_request; is_valid_request = True
+            return redirect(url_for('menu'))
+        else:
+            message = {'message' : 
+                    f'Username or password incorrect, return and try again'}
+            return make_response(jsonify(message), 403)
     else:
-        message = {'message' : 
-                   f'Username or password incorrect, return and try again'}
-        return make_response(jsonify(message), 403)
+        return render_template('login.html')
 
 # menu input - prediction UI
 @app.route('/menu')
@@ -66,19 +70,13 @@ def sign_up():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        # Xử lý yêu cầu đăng ký ở đây
-        # Kiểm tra xem tên người dùng đã tồn tại chưa
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Users WHERE Username = ?", (username,))
-        result = cursor.fetchone()
-        if result is not None:
-            message = {'message' : 'Username already exists, please choose another username'}
-            return make_response(jsonify(message), 403)
+        if account_sign_up(username, password, conn):
+            message = "Create new user success! Redirect to login page."
+            return render_template('sign_up.html', message_signup=message)
         else:
-            # Nếu tên người dùng chưa tồn tại, thêm người dùng mới vào cơ sở dữ liệu
-            cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", (username, password))
-            conn.commit()
-            #return redirect(url_for('login'))
+            message = {'message' : 
+                       'Username already exists, please try again'}
+            return make_response(jsonify(message), 403)
     else:
         return render_template('sign_up.html')
 
