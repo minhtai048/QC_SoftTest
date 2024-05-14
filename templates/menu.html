@@ -214,6 +214,34 @@
         <div id="Total" class="features-icons-item mx-auto mb-0 mb-lg-3">
             <h3>Total Prediction: {{ total_pred }}</h3>
         </div>
+        <table align border="1px solid black" style="width:100%"> 
+            <thead> 
+              <tr> 
+                <th>Age</th> 
+                 <th>Sex</th> 
+                 <th>BMI</th> 
+                 <th>Number of children</th> 
+                 <th>Are you smoking?</th> 
+                 <th>Where are you living?</th> 
+                 <th>Predicted cost</th> 
+                 <th>Time</th> 
+              </tr> 
+            </thead> 
+            <tbody> 
+              {% for row in display_data %} 
+                <tr> 
+                  <td>{{row[0]}}</td> 
+                  <td>{{row[1]}}</td>
+                  <td>{{row[2]}}</td> 
+                  <td>{{row[3]}}</td> 
+                  <td>{{row[4]}}</td> 
+                  <td>{{row[5]}}</td> 
+                  <td>{{row[6]}}</td> 
+                  <td>{{row[7]}}</td> 
+                </tr> 
+              {% endfor %} 
+            </tbody> 
+          </table> 
         <!-- Image Showcases-->
  <!-- Icons Grid-->
        
