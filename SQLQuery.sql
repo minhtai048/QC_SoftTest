@@ -30,4 +30,3 @@ VALUES(
 'testapi@gmail.com',
 'testapi'
 )
-GO
