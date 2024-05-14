@@ -12,12 +12,16 @@ CREATE TABLE InputData(
 	isSmoking varchar(255),
 	Region varchar(255),
 	Prediction decimal(10,2),
-	TimeDate datetime)
+	TimeDate datetime,
+	username NVARCHAR(50),
+	FOREIGN KEY (username) REFERENCES Users(username)
+	)
 
 CREATE TABLE MonitoringData(
     ID int identity(1,1) PRIMARY KEY,
 	totalPred int,
 	TimeDate datetime)
+
 CREATE TABLE Users (
     Username NVARCHAR(50) NOT NULL,
     Password NVARCHAR(50) NOT NULL,
@@ -28,5 +32,6 @@ GO
 INSERT INTO Users
 VALUES(
 'testapi@gmail.com',
-'testapi'
+'testapi',
+'0000'
 )

@@ -23,6 +23,7 @@ is_valid_request = False
 # connection string
 conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
+datamodel = DataModel(conn)
 
 #Load the trained model and encoder. (Pickle file)
 model = pickle.load(open('models/svr_model.pkl', 'rb'))
@@ -36,6 +37,7 @@ app.secret_key = "QCTESTING"
 # homepage - login UI. 
 @app.route('/')
 def home():
+    global is_valid_request; is_valid_request = False
     return render_template('login.html')
 
 # get user login and process
@@ -45,13 +47,13 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if check_login(username, password, conn):
+        if datamodel.check_login(username, password):
             global is_valid_request; is_valid_request = True
             return redirect(url_for('menu'))
         else:
             message = {'message' : 
                     f'Username or password incorrect, return and try again'}
-            return make_response(jsonify(message), 403)
+            return make_response(jsonify(message), 400)
     else:
         return render_template('login.html')
 
@@ -59,7 +61,8 @@ def login():
 @app.route('/menu')
 def menu():
     if (is_valid_request == True):
-        return render_template('menu.html')
+        return render_template('menu.html', 
+                               total_pred=datamodel.inputdata_to_totalpred())
     if (is_valid_request == False):
         message = {'message' : 
                    f'Unauthorized request'}
@@ -74,7 +77,7 @@ def sign_up():
         sr_quest = request.form.get('SR_Quest')
         # if the new account is not duplicated
         # pop up message and update the information to database
-        if account_sign_up(username, password, sr_quest, conn):
+        if datamodel.account_sign_up(username, password, sr_quest):
             message = "Create new user success!"
             return render_template('sign_up.html', message_signup=message)
         else:
@@ -93,7 +96,7 @@ def forgot_password():
         sr_quest = request.form.get('SR_Quest')
         new_password = request.form.get('new_password')
 
-        if recover_password(email, new_password, sr_quest, conn):
+        if datamodel.recover_password(email, new_password, sr_quest):
             message = "User password has been updated!"
             return render_template('forgot_password.html', message_recover=message)
         else:
@@ -127,7 +130,7 @@ def predict():
     if (validate_input(features) == -1):
         message = {'message' : 
                    f'incorrect input data'}
-        return make_response(jsonify(message), 403)
+        return make_response(jsonify(message), 400)
     
     # predicting section
     prediction = predict_(features, scaler, model, lmbda)
@@ -136,14 +139,14 @@ def predict():
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     features_to_database = [ageinput, genderinput, bmiinput, childinput, 
                             smokinginput, regioninput, prediction, current_time]
-    insert_to_inputdata(features_to_database, conn)
+    datamodel.insert_to_inputdata(features_to_database)
 
     global is_valid_request; is_valid_request = False
     #final section -> send data back to front page
     return render_template('menu.html', age=ageinput, gender=gender_display, 
                            bmi=bmiinput, child=childinput, smoking=smokinginput, 
                            region=regioninput, prediction_text= prediction, 
-                           total_pred=inputdata_to_totalpred(conn))
+                           total_pred=datamodel.inputdata_to_totalpred())
 
 if __name__ == "__main__":
     app.run()
