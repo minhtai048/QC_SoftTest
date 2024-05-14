@@ -22,14 +22,26 @@ def insert_to_inputdata(data, conn):
     conn.commit()
 
 # sign up new account
-def account_sign_up(username, password, conn):
+def account_sign_up(username, password, sr_quest, conn):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Users WHERE Username = ?", (username))
     result = cursor.fetchone()
     if result is not None:
         return False
     else:
-        cursor.execute("INSERT INTO Users (Username, Password) VALUES (?, ?)", 
-                        (username, password))
+        cursor.execute("INSERT INTO Users (Username, Password, SR_Quest) VALUES (?, ?, ?)", 
+                       (username, password, sr_quest))
         conn.commit()
     return True
+
+# recover password of an account
+def recover_password(username, password, sr_quest, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Users WHERE Username = ? AND SR_Quest = ?", (username, sr_quest))
+    result = cursor.fetchone()
+    if result is None:
+        return False
+    else:
+        cursor.execute("UPDATE Users SET Password = ? WHERE Username = ?", (password, username))
+        conn.commit()
+        return True

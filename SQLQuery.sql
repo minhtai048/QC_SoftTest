@@ -21,6 +21,7 @@ CREATE TABLE MonitoringData(
 CREATE TABLE Users (
     Username NVARCHAR(50) NOT NULL,
     Password NVARCHAR(50) NOT NULL,
+    SR_Quest NVARCHAR(50) NOT NULL,
     PRIMARY KEY (Username)
 )
 GO
@@ -29,4 +30,3 @@ VALUES(
 'testapi@gmail.com',
 'testapi'
 )
-GO
