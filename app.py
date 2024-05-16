@@ -37,7 +37,6 @@ app.secret_key = "QCTESTING"
 # homepage - login UI. 
 @app.route('/')
 def home():
-    global is_valid_request; is_valid_request = False
     return render_template('login.html')
 
 # get user login and process
@@ -60,9 +59,12 @@ def login():
 # menu input - prediction UI
 @app.route('/menu')
 def menu():
+    global is_valid_request
     if (is_valid_request == True):
+        is_valid_request = False
         return render_template('menu.html', 
-                               total_pred=datamodel.inputdata_to_totalpred())
+                               total_pred=datamodel.inputdata_to_totalpred(),
+                               display_data=datamodel.display_data())
     if (is_valid_request == False):
         message = {'message' : 
                    f'Unauthorized request'}
@@ -146,7 +148,8 @@ def predict():
     return render_template('menu.html', age=ageinput, gender=gender_display, 
                            bmi=bmiinput, child=childinput, smoking=smokinginput, 
                            region=regioninput, prediction_text= prediction, 
-                           total_pred=datamodel.inputdata_to_totalpred())
+                           total_pred=datamodel.inputdata_to_totalpred(),
+                           display_data=datamodel.display_data())
 
 if __name__ == "__main__":
     app.run()

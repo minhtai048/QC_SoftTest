@@ -8,8 +8,11 @@ class DataModel():
         cursor = self.conn.cursor()
         cursor.execute("SELECT username FROM Users WHERE Username = ? AND Password = ?", 
                     (username, password))
-        self.user_id = cursor.fetchone()[0]
-        return self.user_id is not None
+        self.user_id = cursor.fetchone()
+        if (self.user_id is not None):
+            self.user_id = self.user_id[0]
+            return True
+        return False
 
     # get data for total predition
     def inputdata_to_totalpred(self):
@@ -53,3 +56,13 @@ class DataModel():
                         (password, username))
             self.conn.commit()
             return True
+    
+    # display history usage of user
+    def display_data(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT Age, Sex, BMI, numofchildren, issmoking, region, prediction, timedate " +
+                        "FROM inputdata WHERE Username = ?", (self.user_id))
+        result = cursor.fetchall()
+        if result is None:
+            return None
+        return result
