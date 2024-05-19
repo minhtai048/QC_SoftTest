@@ -11,6 +11,16 @@ class DataModel():
         self.user_id = cursor.fetchone()
         if (self.user_id is not None):
             self.user_id = self.user_id[0]
+            return True, self.user_id
+        return False, self.user_id
+    
+    # function for validating request
+    def is_valid_request(self, username):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT username FROM Users WHERE Username = ?", 
+                       (username))
+        valid = cursor.fetchone()
+        if (valid is not None):
             return True
         return False
 
@@ -37,10 +47,10 @@ class DataModel():
         result = cursor.fetchone()
         if result is not None:
             return False
-        else:
-            cursor.execute("INSERT INTO Users (Username, Password, SR_Quest) VALUES (?, ?, ?)", 
-                        (username, password, sr_quest))
-            self.conn.commit()
+        
+        cursor.execute("INSERT INTO Users (Username, Password, SR_Quest) VALUES (?, ?, ?)", 
+                    (username, password, sr_quest))
+        self.conn.commit()
         return True
 
     # recover password of an account
@@ -51,11 +61,11 @@ class DataModel():
         result = cursor.fetchone()
         if result is None:
             return False
-        else:
-            cursor.execute("UPDATE Users SET Password = ? WHERE Username = ?", 
-                        (password, username))
-            self.conn.commit()
-            return True
+        
+        cursor.execute("UPDATE Users SET Password = ? WHERE Username = ?", 
+                    (password, username))
+        self.conn.commit()
+        return True
     
     # display history usage of user
     def display_data(self):
