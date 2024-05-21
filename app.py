@@ -17,10 +17,18 @@ from flask import redirect, url_for, jsonify, make_response
 from utils.app_process import *
 from utils.database_process import *
 
-# global variables
+### global variables
+# app variables
 logged_id = None
 is_predicted = False
 predicted_value = None
+# feature variables
+ageinput = None
+gender_display = None
+bmiinput = None
+childinput = None
+smokinginput = None
+regioninput = None
 
 # connection string
 conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
@@ -61,19 +69,8 @@ def login():
 # menu input - prediction UI
 @app.route('/menu', methods=['GET', 'POST'])
 def menu():
-    global logged_id, is_predicted, predicted_value
-
-    #input section
-    ageinput = request.form.get('ageinput')
-    genderinput = request.form.get('genderinput')
-    bmiinput = request.form.get('bmiinput')
-    childinput = request.form.get('childinput')
-    smokinginput = request.form.get('smokinginput')
-    regioninput = request.form.get('regioninput')
-
-    # male and female will be transformed to 0 and 1
-    # gender_display will be used to display client's input
-    gender_display = genderinput 
+    global logged_id, is_predicted, predicted_value, childinput
+    global ageinput, gender_display, bmiinput, smokinginput, regioninput
 
     if (request.method == 'GET'):
         logged_id = request.args.get('logged_id', None)
@@ -99,6 +96,18 @@ def menu():
                        f'Username or password incorrect, return and try again'}
             return make_response(jsonify(message), 400)
         
+        #input section
+        ageinput = request.form.get('ageinput')
+        genderinput = request.form.get('genderinput')
+        bmiinput = request.form.get('bmiinput')
+        childinput = request.form.get('childinput')
+        smokinginput = request.form.get('smokinginput')
+        regioninput = request.form.get('regioninput')
+
+        # male and female will be transformed to 0 and 1
+        # gender_display will be used to display client's input
+        gender_display = genderinput 
+        
         #transformation section
         features = pd.DataFrame({"age":[int(ageinput)], "sex":[genderinput], 
                                 "bmi":[float(bmiinput)], "children":[int(childinput)], 
@@ -120,7 +129,7 @@ def menu():
 
         is_predicted = True
         predicted_value = prediction
-        #final section -> send data back to front page
+        #final section -> redirect back to menu and update result
         return redirect(url_for('menu', logged_id=logged_id))
     
     message = {'message' : f'Unauthorized request'}
