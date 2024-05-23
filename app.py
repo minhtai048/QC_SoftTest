@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import pyodbc
+import re
 from datetime import datetime
 from flask import Flask, request, render_template, flash
 from flask import redirect, url_for, jsonify, make_response
@@ -22,6 +23,7 @@ from utils.database_process import *
 logged_id = None
 is_predicted = False
 predicted_value = None
+special_characters = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
 # feature variables
 ageinput = None
 gender_display = None
@@ -56,12 +58,21 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
+        if username is None and password is None:
+            message = {'message' : f'Inputs cannot be empty!'}
+            return make_response(jsonify(message), 400)
+
         is_valid_log, logged_id_to_valid = datamodel.check_login(username, password)
         if is_valid_log:
             return redirect(url_for('menu', logged_id=logged_id_to_valid))
         
+        if is_valid_log is False and logged_id_to_valid == "invalid":
+            message = {'message' : 
+                f'Username incorrect, return and try again'}
+            return make_response(jsonify(message), 400)
+
         message = {'message' : 
-                f'Username or password incorrect, return and try again'}
+                f'password incorrect, return and try again'}
         return make_response(jsonify(message), 400)
     
     return render_template('login.html')
@@ -143,15 +154,30 @@ def sign_up():
         password = request.form.get('password')
         sr_quest = request.form.get('SR_Quest')
 
-        # if the new account is not duplicated
-        # pop up message and update the information to database
+        if username is None or password is None or sr_quest is None:
+            message = {'message' : 'Inputs cannot be empty'}
+            return make_response(jsonify(message), 400)
+
+        if datamodel.check_login_username(username):
+            message = {'message' : 
+                       'Username already exists, please try again'}
+            return make_response(jsonify(message), 400)
+        
+        if datamodel.check_secret_key(username) is False:
+            message = {'message' : 
+                       'secret key is incorrect, please try again'}
+            return make_response(jsonify(message), 400)
+        
+        if special_characters.search(password) == None or len(password) < 6:
+            message = {'message' : 
+                       'Password must have at least one special character ' + 
+                       'and cannot be shorter than 6 letters'}
+            return make_response(jsonify(message), 400)
+
+        # if valid request
         if datamodel.account_sign_up(username, password, sr_quest):
             message = "Create new user success!"
             return render_template('sign_up.html', message_signup=message)
-
-        message = {'message' : 
-                    'Username already exists, please try again'}
-        return make_response(jsonify(message), 400)
 
     return render_template('sign_up.html')
 
@@ -164,13 +190,27 @@ def forgot_password():
         sr_quest = request.form.get('SR_Quest')
         new_password = request.form.get('new_password')
 
+        if email is None or sr_quest is None or new_password is None:
+            message = {'message' : 'Inputs cannot be empty'}
+            return make_response(jsonify(message), 400)
+        
+        if datamodel.check_login_username(email) is False:
+            message = {'message' : 'Username is incorrect, please try again'}
+            return make_response(jsonify(message), 400)
+        
+        if datamodel.check_secret_key(email, sr_quest) is False:
+            message = {'message' : 'secret key is incorrect, please try again'}
+            return make_response(jsonify(message), 400)
+        
+        if special_characters.search(new_password) == None or len(new_password) < 6:
+            message = {'message' : 
+                       'Password must have at least one special character ' + 
+                       'and cannot be shorter than 6 letters'}
+            return make_response(jsonify(message), 400)
+
         if datamodel.recover_password(email, new_password, sr_quest):
             message = "User password has been updated!"
             return render_template('forgot_password.html', message_recover=message)
-
-        message = {'message' : 
-                    'Email or secret question incorrect, return and try again'}
-        return make_response(jsonify(message), 400)
         
     return render_template('forgot_password.html')
 
