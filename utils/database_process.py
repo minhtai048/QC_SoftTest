@@ -3,16 +3,35 @@ class DataModel():
         self.conn = conn
         self.user_id = ""
 
+    # function to check username available in database
+    def check_login_username(self, username):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT username FROM Users WHERE Username = ?", (username))
+        if (cursor.fetchone() is not None):
+            return True
+        return False
+    
+    # function to check username and secret key available in database
+    def check_secret_key(self, username, sr_quest):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT username FROM Users WHERE Username = ? AND sr_quest = ?", 
+                       (username, sr_quest))
+        if (cursor.fetchone() is not None):
+            return True
+        return False
+
     # function for login checking
     def check_login(self, username, password):
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT username FROM Users WHERE Username = ? AND Password = ?", 
-                    (username, password))
-        self.user_id = cursor.fetchone()
-        if (self.user_id is not None):
-            self.user_id = self.user_id[0]
-            return True, self.user_id
-        return False, self.user_id
+        if self.check_login_username(username):
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT username FROM Users WHERE Username = ? AND Password = ?", 
+                        (username, password))
+            self.user_id = cursor.fetchone()
+            if (self.user_id is not None):
+                self.user_id = self.user_id[0]
+                return True, self.user_id
+            return False, self.user_id
+        return False, "invalid"
     
     # function for validating request
     def is_valid_request(self, username):
