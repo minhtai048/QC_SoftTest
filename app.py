@@ -7,13 +7,12 @@ Commerical purposes are restricted, any modifications are
 expected to have permission from US Authorities.
 """
 
-import numpy as np
 import pandas as pd
 import pickle
 import pyodbc
 import re
 from datetime import datetime
-from flask import Flask, request, render_template, flash
+from flask import Flask, request, render_template
 from flask import redirect, url_for, jsonify, make_response
 from utils.app_process import *
 from utils.database_process import *
@@ -21,6 +20,7 @@ from utils.database_process import *
 ### global variables
 # app variables
 logged_id = None
+logged_password = None
 is_predicted = False
 predicted_value = None
 special_characters = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
@@ -37,12 +37,12 @@ conn = pyodbc.connect("DRIVER={SQL Server};Server=WINDOWS-11\SQLEXPRESS;" +
                       "Database=QA_TEST;Port=8008;trusted_connection=true")
 datamodel = DataModel(conn)
 
-#Load the trained model and encoder. (Pickle file)
+# Load the trained model and encoder. (Pickle file)
 model = pickle.load(open('models/svr_model.pkl', 'rb'))
 scaler = pickle.load(open('models/mm_encoder.pkl', 'rb'))
 lmbda = pickle.load(open('models/lmbda_price.pkl', 'rb'))
 
-#Flask class - Web application. 
+# Flask class - Web application. 
 app = Flask(__name__)
 app.secret_key = "QCTESTING"
 
@@ -54,6 +54,7 @@ def home():
 # get user login and process
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global logged_password
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -64,27 +65,26 @@ def login():
 
         is_valid_log, logged_id_to_valid = datamodel.check_login(username, password)
         if is_valid_log:
+            logged_password = password
             return redirect(url_for('menu', logged_id=logged_id_to_valid))
         
         if is_valid_log is False and logged_id_to_valid == "invalid":
             message = {'message' : 
                 f'Username incorrect, return and try again'}
             return make_response(jsonify(message), 400)
-
-        message = {'message' : 
-                f'password incorrect, return and try again'}
-        return make_response(jsonify(message), 400)
-    
     return render_template('login.html')
 
 # menu input - prediction UI
 @app.route('/menu', methods=['GET', 'POST'])
 def menu():
-    global logged_id, is_predicted, predicted_value, childinput
+    global logged_id, logged_password, is_predicted, predicted_value, childinput
     global ageinput, gender_display, bmiinput, smokinginput, regioninput
 
     if (request.method == 'GET'):
         logged_id = request.args.get('logged_id', None)
+        print(logged_password)
+        if logged_password is None:
+            logged_password = request.args.get('logged_password', None)
 
         # render to menu page with predicted values
         if (datamodel.is_valid_request(logged_id) and is_predicted is True):
@@ -94,19 +94,22 @@ def menu():
                            region=regioninput, prediction_text=predicted_value, 
                            total_pred=datamodel.inputdata_to_totalpred(),
                            display_data=datamodel.display_data())
-        
+
         # render to menu without predicted values
-        if (datamodel.is_valid_request(logged_id)):
+        is_valid_log, _ = datamodel.check_login(logged_id, logged_password)
+        if (is_valid_log):
             return render_template('menu.html', 
                                 total_pred=datamodel.inputdata_to_totalpred(),
                                 display_data=datamodel.display_data())
         
+        message = {'message' : f'Unauthorized request'}
+        return make_response(jsonify(message), 405)
+  
     if (request.method == 'POST'):  
         if (logged_id is None):
-            message = {'message' : 
-                       f'Username or password incorrect, return and try again'}
-            return make_response(jsonify(message), 400)
-        
+            message = {'message' : f'Unauthorized request'}
+            return make_response(jsonify(message), 405)
+
         #input section
         ageinput = request.form.get('ageinput')
         genderinput = request.form.get('genderinput')
@@ -117,18 +120,24 @@ def menu():
 
         # male and female will be transformed to 0 and 1
         # gender_display will be used to display client's input
-        gender_display = genderinput 
-        
+        gender_display = genderinput
+
+        # validate input empty
+        if (ageinput == '' or genderinput == '' or bmiinput == '' or
+            childinput == '' or smokinginput == '' or regioninput == ''):
+            message = {'message' : f'input cannot be empty! Please try again'}
+            return make_response(jsonify(message), 400)
+
         #transformation section
         features = pd.DataFrame({"age":[int(ageinput)], "sex":[genderinput], 
                                 "bmi":[float(bmiinput)], "children":[int(childinput)], 
                                 "smoker":[smokinginput], "region":[regioninput]})
-        
-        # validating section
-        if (validate_input(features) == -1):
-            message = {'message' : f'incorrect input data'}
-            return make_response(jsonify(message), 400)
-        
+
+        # validating input format
+        is_valid, message_inputs = valid_check_input(features)
+        if (is_valid is False):
+            return make_response(jsonify(message_inputs), 400)
+
         # predicting section
         prediction = predict_(features, scaler, model, lmbda)
 
@@ -162,12 +171,12 @@ def sign_up():
             message = {'message' : 
                        'Username already exists, please try again'}
             return make_response(jsonify(message), 400)
-        
+
         if datamodel.check_secret_key(username) is False:
             message = {'message' : 
                        'secret key is incorrect, please try again'}
             return make_response(jsonify(message), 400)
-        
+
         if special_characters.search(password) == None or len(password) < 6:
             message = {'message' : 
                        'Password must have at least one special character ' + 
@@ -193,15 +202,15 @@ def forgot_password():
         if email is None or sr_quest is None or new_password is None:
             message = {'message' : 'Inputs cannot be empty'}
             return make_response(jsonify(message), 400)
-        
+
         if datamodel.check_login_username(email) is False:
             message = {'message' : 'Username is incorrect, please try again'}
             return make_response(jsonify(message), 400)
-        
+
         if datamodel.check_secret_key(email, sr_quest) is False:
             message = {'message' : 'secret key is incorrect, please try again'}
             return make_response(jsonify(message), 400)
-        
+
         if special_characters.search(new_password) == None or len(new_password) < 6:
             message = {'message' : 
                        'Password must have at least one special character ' + 
@@ -211,7 +220,7 @@ def forgot_password():
         if datamodel.recover_password(email, new_password, sr_quest):
             message = "User password has been updated!"
             return render_template('forgot_password.html', message_recover=message)
-        
+
     return render_template('forgot_password.html')
 
 

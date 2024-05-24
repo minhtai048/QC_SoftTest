@@ -31,13 +31,27 @@ def features_transform(features):
     return features
 
 # validate input from client
-def validate_input(features):
-    if (features.age[0] <= 1 or features.age[0] >= 99):
-        return -1
-    if (features.bmi[0] <= 0 or features.bmi[0] >= 99):
-        return -1
-    if (features.children[0] <= 0):
-        return -1
+def valid_check_input(features):
+    message = "valid"
+    if (features.age[0] < 1 or features.age[0] > 99):
+        message = {'message' : f'invalid age! Please try again'}
+        return False, message
+    if (features.sex[0] not in ['female', 'male']):
+        message = {'message' : f'invalid sex! Please try again'}
+        return False, message
+    if (features.bmi[0] < 5 or features.bmi[0] > 60):
+        message = {'message' : f'invalid bmi! Please try again'}
+        return False, message
+    if (features.children[0] < 0 or features.children[0] > 99):
+        message = {'message' : f'invalid children! Please try again'}
+        return False, message
+    if (features.smoker[0] not in ['yes', 'no']):
+        message = {'message' : f'invalid smoking! Please try again'}
+        return False, message
+    if (features.region[0] not in ['northeast', 'northwest', 'southeast', 'southwest']):
+        message = {'message' : f'invalid region! Please try again'}
+        return False, message
+    return True, message
 
 # predict result from client's input
 ## scaler: scaler to scale features
