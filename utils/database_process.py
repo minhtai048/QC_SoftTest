@@ -29,9 +29,11 @@ class DataModel():
             self.user_id = cursor.fetchone()
             if (self.user_id is not None):
                 self.user_id = self.user_id[0]
-                return True, self.user_id
-            return False, self.user_id
-        return False, "invalid"
+                return True, self.user_id # correct login
+            
+            return False, self.user_id # wrong password
+        
+        return False, "invalid" # wrong username
     
     # function for validating request
     def is_valid_request(self, username):
