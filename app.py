@@ -24,6 +24,7 @@ logged_password = None
 is_predicted = False
 predicted_value = None
 special_characters = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+email_valid = "[^@]+@[^@]+\.[^@]+"
 # feature variables
 ageinput = None
 gender_display = None
@@ -59,7 +60,7 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if username is None and password is None:
+        if username is None or password is None:
             message = {'message' : f'Inputs cannot be empty!'}
             return make_response(jsonify(message), 400)
 
@@ -69,9 +70,12 @@ def login():
             return redirect(url_for('menu', logged_id=logged_id_to_valid))
         
         if is_valid_log is False and logged_id_to_valid == "invalid":
-            message = {'message' : 
-                f'Username incorrect, return and try again'}
+            message = {'message' : f'Username incorrect, return and try again'}
             return make_response(jsonify(message), 400)
+        
+        message = {'message' : f'password incorrect, return and try again'}
+        return make_response(jsonify(message), 400)
+    
     return render_template('login.html')
 
 # menu input - prediction UI
@@ -82,7 +86,6 @@ def menu():
 
     if (request.method == 'GET'):
         logged_id = request.args.get('logged_id', None)
-        print(logged_password)
         if logged_password is None:
             logged_password = request.args.get('logged_password', None)
 
@@ -167,20 +170,20 @@ def sign_up():
             message = {'message' : 'Inputs cannot be empty'}
             return make_response(jsonify(message), 400)
 
-        if datamodel.check_login_username(username):
+        if not re.match(email_valid, username) or datamodel.check_login_username(username):
             message = {'message' : 
-                       'Username already exists, please try again'}
-            return make_response(jsonify(message), 400)
-
-        if datamodel.check_secret_key(username) is False:
-            message = {'message' : 
-                       'secret key is incorrect, please try again'}
+                       'Username is not an email or already exists, please try again'}
             return make_response(jsonify(message), 400)
 
         if special_characters.search(password) == None or len(password) < 6:
             message = {'message' : 
                        'Password must have at least one special character ' + 
                        'and cannot be shorter than 6 letters'}
+            return make_response(jsonify(message), 400)
+        
+        if len(sr_quest) != 6:
+            message = {'message' : 
+                       'Secret key only contains exact 6 numbers, please try again'}
             return make_response(jsonify(message), 400)
 
         # if valid request
@@ -189,7 +192,6 @@ def sign_up():
             return render_template('sign_up.html', message_signup=message)
 
     return render_template('sign_up.html')
-
 
 # recover password - recover UI
 @app.route('/forgot_password', methods=['GET', 'POST'])
@@ -222,7 +224,6 @@ def forgot_password():
             return render_template('forgot_password.html', message_recover=message)
 
     return render_template('forgot_password.html')
-
 
 if __name__ == "__main__":
     app.run()
